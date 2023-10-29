@@ -1,0 +1,18 @@
+# run ghostfacenet
+C:\Users\MyPC\extract-information-from-video\GhostFaceNets> python video_test.py --model_file ./models/GN_W0.5_S2_ArcFace_epoch16.h5 --known_user ./known_user --video_source video/2_eminem_cut.mp4
+# run siamrpn
+C:\Users\MyPC\extract-information-from-video\pysot> python tools/demo.py --config experiments/siamrpn_r50_l234_dwxcorr/config.yaml --snapshot experiments/siamrpn_r50_l234_dwxcorr/model.pth --video video/2_eminem_cut.mp4
+
+on windows: install ffmpeg 
+https://www.geeksforgeeks.org/how-to-install-ffmpeg-on-windows/
+ảnh known_use phải dưới định dạng jpg
+
+# web để cut và tải video youtube
+https://youtube4kdownloader.com/en93/cut-youtube-video.html
+
+kịch bản demo
+1 video ngắn 
+[không có]-[có]-[không có]-[có]
+
+lấy tọa độ bounding box
+https://www.gifgit.com/image/rectangle-tool

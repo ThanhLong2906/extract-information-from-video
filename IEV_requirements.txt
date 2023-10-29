@@ -1,0 +1,4 @@
+moviepy
+# SpeechRecognition
+openai-whisper
+ur_audio_sub

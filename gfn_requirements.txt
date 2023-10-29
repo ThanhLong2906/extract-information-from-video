@@ -1,0 +1,10 @@
+# Python 3.9.12 64-bit
+TensorFlow==2.8.0 
+Keras==2.8.0 
+keras_cv_attention_models
+glob2
+pandas
+tqdm
+scikit-learn
+scikit-image
+opencv-python
