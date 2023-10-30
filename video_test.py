@@ -157,11 +157,12 @@ def video_recognize(image_classes, embeddings, det, face_model, video_source=0, 
             break
         if cur_frame_idx % frames_per_detect == 0:
             rec_dist, rec_class, bbs, ccs = image_recognize(image_classes, embeddings, det, face_model, frame)
+            print(rec_dist)
             if len(rec_dist)>0:
                 if rec_dist[0] >= dist_thresh and start_idx == None:
                     start_idx = cur_frame_idx
                 elif rec_dist[0] < dist_thresh and start_idx != None:
-                    end_idx = cur_frame_idx - frames_per_detect
+                    end_idx = cur_frame_idx #- frames_per_detect
                     time.append((start_idx, end_idx))
                     start_idx = None
                     end_idx = None
@@ -195,12 +196,12 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-m", "--model_file", type=str, required=True, help="Saved basic_model file path, NOT model")
-    parser.add_argument("-o", "--output folder", type=str, help="output folder")
+    parser.add_argument("-o", "--output", type=str, help="output folder")
     parser.add_argument("-k", "--known_user", type=str, default=None, help="Folder containing user images data")
     parser.add_argument("-K", "--known_user_force", type=str, default=None, help="Folder containing user images data, force reload")
     parser.add_argument("-b", "--embedding_batch_size", type=int, default=4, help="Batch size for extracting known user embedding data")
     parser.add_argument("-s", "--video_source", type=str, default="0", help="Video source")
-    parser.add_argument("-t", "--dist_thresh", type=float, default=0.6, help="Cosine dist thresh, dist lower than this will be Unknown")
+    parser.add_argument("-t", "--dist_thresh", type=float, default=0.2, help="Cosine dist thresh, dist lower than this will be Unknown")
     parser.add_argument("-p", "--frames_per_detect", type=int, default=5, help="Do detect every [NUM] frame")
     args = parser.parse_known_args(sys.argv[1:])[0]
 
@@ -216,7 +217,6 @@ if __name__ == "__main__":
         image_classes, embeddings, _ = embedding_images(det, face_model, known_user, args.embedding_batch_size, force_reload)
         video_source = int(args.video_source) if str.isnumeric(args.video_source) else args.video_source
         time, fps = video_recognize(image_classes, embeddings, det, face_model, video_source, args.frames_per_detect, args.dist_thresh)
-        print(f"time: {time}, fps: {fps}")
 
     for idx, interval in enumerate(time):
         # find timestamp of each frame
@@ -225,7 +225,7 @@ if __name__ == "__main__":
         output = f"{args.output}/video_{idx}.wav"
         # cut_video((start_time, end_time), output=output)
         # extract audio from file
-        video = moviepy.editor.VideoFileClip(args.video).subclip(start_time, end_time)
+        video = moviepy.editor.VideoFileClip(args.video_source).subclip(start_time, end_time)
         audio = video.audio
         audio.write_audiofile(output)
         # subGen_path(output)
