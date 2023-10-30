@@ -195,6 +195,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-m", "--model_file", type=str, required=True, help="Saved basic_model file path, NOT model")
+    parser.add_argument("-o", "--output folder", type=str, help="output folder")
     parser.add_argument("-k", "--known_user", type=str, default=None, help="Folder containing user images data")
     parser.add_argument("-K", "--known_user_force", type=str, default=None, help="Folder containing user images data, force reload")
     parser.add_argument("-b", "--embedding_batch_size", type=int, default=4, help="Batch size for extracting known user embedding data")
@@ -215,6 +216,7 @@ if __name__ == "__main__":
         image_classes, embeddings, _ = embedding_images(det, face_model, known_user, args.embedding_batch_size, force_reload)
         video_source = int(args.video_source) if str.isnumeric(args.video_source) else args.video_source
         time, fps = video_recognize(image_classes, embeddings, det, face_model, video_source, args.frames_per_detect, args.dist_thresh)
+        print(f"time: {time}, fps: {fps}")
 
     for idx, interval in enumerate(time):
         # find timestamp of each frame
