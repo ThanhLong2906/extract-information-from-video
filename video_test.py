@@ -20,6 +20,8 @@ from face_detector import YoloV5FaceDetector
 import moviepy.editor
 import whisper
 
+import time
+
 def init_det_and_emb_model(model_file):
     # det = insightface.model_zoo.face_detection.retinaface_mnet025_v1()
     # det = insightface.model_zoo.SCRFD(model_file=os.path.expanduser("~/.insightface/models/antelope/scrfd_10g_bnkps.onnx"))
@@ -132,8 +134,6 @@ def draw_polyboxes(frame, rec_dist, rec_class, bbs, ccs, dist_thresh):
 def speech2text(file_path: str, model: str ="medium", language: str= "Vietnamese"):
     model=whisper.load_model(model)
     result = model.transcribe(file_path, language=language, fp16=False)
-    if result['text'] == "Hãy subscribe cho kênh Ghiền Mì Gõ Để không bỏ lỡ những video hấp dẫn":
-        result['text'] = ''
     return result["text"]
 
 def video_recognize(image_classes, embeddings, det, face_model, video_source=0, frames_per_detect=5, dist_thresh=0.6):
@@ -227,8 +227,8 @@ if __name__ == "__main__":
 
         # write output 1st stage
         with open(f"{args.output}/time.txt", "a+", encoding='utf-8') as f:
-            f.write(str((start_time, end_time)))
-            
+            f.write(str((start_time, end_time)) + "\n")
+
         output = f"{args.output}/video_{idx}.wav"
         # cut_video((start_time, end_time), output=output)
         # extract audio from file
@@ -237,6 +237,8 @@ if __name__ == "__main__":
         audio.write_audiofile(output)
         # subGen_path(output)
         text = speech2text(output)
+        if text != "Hãy subscribe cho kênh Ghiền Mì Gõ Để không bỏ lỡ những video hấp dẫn":
+            text = ''
         with open(f"{args.output}/video_output.txt", "a+", encoding='utf-8') as f:
-            f.write("---interval_{idx}--- \n")
+            f.write(f"---interval_{(start_time, end_time)}--- \n")
             f.write(text +"\n")
