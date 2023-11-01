@@ -217,8 +217,11 @@ if __name__ == "__main__":
         image_classes, embeddings, _ = embedding_images(det, face_model, known_user, args.embedding_batch_size, force_reload)
         video_source = int(args.video_source) if str.isnumeric(args.video_source) else args.video_source
         time, fps = video_recognize(image_classes, embeddings, det, face_model, video_source, args.frames_per_detect, args.dist_thresh)
-
+    
     for idx, interval in enumerate(time):
+        # write output 1st stage
+        with open(f"{args.output}/time.txt", "a+", encoding='utf-8') as f:
+            f.write(interval)
         # find timestamp of each frame
         start_time = (1/fps)*interval[0]
         end_time = (1/fps)*interval[1]
@@ -230,5 +233,6 @@ if __name__ == "__main__":
         audio.write_audiofile(output)
         # subGen_path(output)
         text = speech2text(output)
-        with open(f"{args.output}/video_{idx}.txt", "w+", encoding='utf-8') as f:
+        with open(f"{args.output}/video_output.txt", "a+", encoding='utf-8') as f:
+            f.write("---interval_{idx}--- \n")
             f.write(text)
