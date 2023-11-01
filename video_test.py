@@ -21,6 +21,7 @@ import moviepy.editor
 import whisper
 
 import time
+import openai
 
 def init_det_and_emb_model(model_file):
     # det = insightface.model_zoo.face_detection.retinaface_mnet025_v1()
@@ -133,7 +134,8 @@ def draw_polyboxes(frame, rec_dist, rec_class, bbs, ccs, dist_thresh):
 
 def speech2text(file_path: str, model: str ="medium", language: str= "Vietnamese"):
     model=whisper.load_model(model)
-    result = model.transcribe(file_path, language=language, fp16=False)
+    result = model.transcribe(file_path, language=language, fp16=False,
+                              initial_prompt= "The sentence may be cut off, do not make up words to fill in the rest of the sentence.")
     return result["text"]
 
 def video_recognize(image_classes, embeddings, det, face_model, video_source=0, frames_per_detect=5, dist_thresh=0.6):
