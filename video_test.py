@@ -230,14 +230,15 @@ if __name__ == "__main__":
             f.write(str((start_time, end_time)) + "\n")
 
         output = f"{args.output}/video_{idx}.wav"
-        # cut_video((start_time, end_time), output=output)
+
         # extract audio from file
         video = moviepy.editor.VideoFileClip(args.video_source).subclip(start_time, end_time)
         audio = video.audio
         audio.write_audiofile(output)
-        # subGen_path(output)
+
+        # speech to text
         text = speech2text(output)
-        if text != "Hãy subscribe cho kênh Ghiền Mì Gõ Để không bỏ lỡ những video hấp dẫn":
+        if text == "Hãy subscribe cho kênh Ghiền Mì Gõ Để không bỏ lỡ những video hấp dẫn":
             text = ''
         with open(f"{args.output}/video_output.txt", "a+", encoding='utf-8') as f:
             f.write(f"---interval_{(start_time, end_time)}--- \n")
