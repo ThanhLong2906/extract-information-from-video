@@ -221,7 +221,7 @@ if __name__ == "__main__":
     for idx, interval in enumerate(time):
         # write output 1st stage
         with open(f"{args.output}/time.txt", "a+", encoding='utf-8') as f:
-            f.write(interval)
+            f.write(str(interval))
         # find timestamp of each frame
         start_time = (1/fps)*interval[0]
         end_time = (1/fps)*interval[1]
