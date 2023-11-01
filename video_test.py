@@ -132,6 +132,8 @@ def draw_polyboxes(frame, rec_dist, rec_class, bbs, ccs, dist_thresh):
 def speech2text(file_path: str, model: str ="medium", language: str= "Vietnamese"):
     model=whisper.load_model(model)
     result = model.transcribe(file_path, language=language, fp16=False)
+    if result['text'] == "Hãy subscribe cho kênh Ghiền Mì Gõ Để không bỏ lỡ những video hấp dẫn":
+        result['text'] = ''
     return result["text"]
 
 def video_recognize(image_classes, embeddings, det, face_model, video_source=0, frames_per_detect=5, dist_thresh=0.6):
@@ -157,7 +159,7 @@ def video_recognize(image_classes, embeddings, det, face_model, video_source=0, 
             break
         if cur_frame_idx % frames_per_detect == 0:
             rec_dist, rec_class, bbs, ccs = image_recognize(image_classes, embeddings, det, face_model, frame)
-            print(rec_dist)
+            # print(rec_dist)
             if len(rec_dist)>0:
                 if rec_dist[0] >= dist_thresh and start_idx == None:
                     start_idx = cur_frame_idx
@@ -218,13 +220,15 @@ if __name__ == "__main__":
         video_source = int(args.video_source) if str.isnumeric(args.video_source) else args.video_source
         time, fps = video_recognize(image_classes, embeddings, det, face_model, video_source, args.frames_per_detect, args.dist_thresh)
     
-    for idx, interval in enumerate(time):
-        # write output 1st stage
-        with open(f"{args.output}/time.txt", "a+", encoding='utf-8') as f:
-            f.write(str(interval))
+    for idx, interval in enumerate(time):        
         # find timestamp of each frame
         start_time = (1/fps)*interval[0]
         end_time = (1/fps)*interval[1]
+
+        # write output 1st stage
+        with open(f"{args.output}/time.txt", "a+", encoding='utf-8') as f:
+            f.write(str((start_time, end_time)))
+            
         output = f"{args.output}/video_{idx}.wav"
         # cut_video((start_time, end_time), output=output)
         # extract audio from file
@@ -235,4 +239,4 @@ if __name__ == "__main__":
         text = speech2text(output)
         with open(f"{args.output}/video_output.txt", "a+", encoding='utf-8') as f:
             f.write("---interval_{idx}--- \n")
-            f.write(text)
+            f.write(text +"\n")
