@@ -158,7 +158,6 @@ def video_recognize(image_classes, embeddings, det, face_model, video_source=0, 
             break
         if cur_frame_idx % frames_per_detect == 0:
             rec_dist, rec_class, bbs, ccs = image_recognize(image_classes, embeddings, det, face_model, frame)
-            print(rec_dist)
             if len(rec_dist)>0:
                 if max(rec_dist) >= dist_thresh and start_idx == None:
                     start_idx =cap.get(cv2.CAP_PROP_POS_MSEC) #cur_frame_idx
