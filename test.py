@@ -1,11 +1,4 @@
-import argparse 
+from speechbrain.pretrained import EncoderASR
 
-parser = argparse.ArgumentParser()
-
-parser.add_argument("--video", type=str)
-
-args = parser.parse_args()
-
-if __name__=='__main__':
-    print(args.video)
-
+model = EncoderASR.from_hparams(source="dragonSwing/wav2vec2-base-vn-270h", savedir="pretrained_models/asr-wav2vec2-vi")
+model.transcribe_file('dragonSwing/wav2vec2-base-vn-270h/example.mp3')

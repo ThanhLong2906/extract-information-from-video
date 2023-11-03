@@ -20,9 +20,6 @@ from face_detector import YoloV5FaceDetector
 import moviepy.editor
 import whisper
 
-import time
-import openai
-
 def init_det_and_emb_model(model_file):
     # det = insightface.model_zoo.face_detection.retinaface_mnet025_v1()
     # det = insightface.model_zoo.SCRFD(model_file=os.path.expanduser("~/.insightface/models/antelope/scrfd_10g_bnkps.onnx"))
@@ -134,8 +131,7 @@ def draw_polyboxes(frame, rec_dist, rec_class, bbs, ccs, dist_thresh):
 
 def speech2text(file_path: str, model: str ="medium", language: str= "Vietnamese"):
     model=whisper.load_model(model)
-    result = model.transcribe(file_path, language=language, fp16=False,
-                              initial_prompt= "The sentence may be cut off, do not make up words to fill in the rest of the sentence.")
+    result = model.transcribe(file_path, language=language, fp16=False)
     return result["text"]
 
 def video_recognize(image_classes, embeddings, det, face_model, video_source=0, frames_per_detect=5, dist_thresh=0.6):
@@ -207,6 +203,7 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--video_source", type=str, default="0", help="Video source")
     parser.add_argument("-t", "--dist_thresh", type=float, default=0.2, help="Cosine dist thresh, dist lower than this will be Unknown")
     parser.add_argument("-p", "--frames_per_detect", type=int, default=5, help="Do detect every [NUM] frame")
+    parser.add_argument("-s2t", "--speech_to_text", type=bool, default=True, help="Run speech_to_text")
     args = parser.parse_known_args(sys.argv[1:])[0]
 
     det, face_model = init_det_and_emb_model(args.model_file)
@@ -221,27 +218,29 @@ if __name__ == "__main__":
         image_classes, embeddings, _ = embedding_images(det, face_model, known_user, args.embedding_batch_size, force_reload)
         video_source = int(args.video_source) if str.isnumeric(args.video_source) else args.video_source
         time, fps = video_recognize(image_classes, embeddings, det, face_model, video_source, args.frames_per_detect, args.dist_thresh)
+        
+    if args.speech_to_text:
+        for idx, interval in enumerate(time):        
+            # find timestamp of each frame
+            start_time = (1/fps)*interval[0]
+            end_time = (1/fps)*interval[1]
+
+            # write output 1st stage
+            with open(f"{args.output}/time.txt", "a+", encoding='utf-8') as f:
+                f.write(str((start_time, end_time)) + "\n")
+
+            output = f"{args.output}/video_{idx}.wav"
+
+            # extract audio from file
+            video = moviepy.editor.VideoFileClip(args.video_source).subclip(start_time, end_time)
+            audio = video.audio
+            audio.write_audiofile(output)
+
+            # speech to text
+            text = speech2text(output)
+            if text == "Hãy subscribe cho kênh Ghiền Mì Gõ Để không bỏ lỡ những video hấp dẫn":
+                text = ''
+            with open(f"{args.output}/video_output.txt", "a+", encoding='utf-8') as f:
+                f.write(f"---interval_{(start_time, end_time)}--- \n")
+                f.write(text +"\n")
     
-    for idx, interval in enumerate(time):        
-        # find timestamp of each frame
-        start_time = (1/fps)*interval[0]
-        end_time = (1/fps)*interval[1]
-
-        # write output 1st stage
-        with open(f"{args.output}/time.txt", "a+", encoding='utf-8') as f:
-            f.write(str((start_time, end_time)) + "\n")
-
-        output = f"{args.output}/video_{idx}.wav"
-
-        # extract audio from file
-        video = moviepy.editor.VideoFileClip(args.video_source).subclip(start_time, end_time)
-        audio = video.audio
-        audio.write_audiofile(output)
-
-        # speech to text
-        text = speech2text(output)
-        if text == "Hãy subscribe cho kênh Ghiền Mì Gõ Để không bỏ lỡ những video hấp dẫn":
-            text = ''
-        with open(f"{args.output}/video_output.txt", "a+", encoding='utf-8') as f:
-            f.write(f"---interval_{(start_time, end_time)}--- \n")
-            f.write(text +"\n")
