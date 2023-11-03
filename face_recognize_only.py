@@ -141,6 +141,14 @@ def video_recognize(image_classes, embeddings, det, face_model, video_source=0, 
     cur_frame_idx = 0
     time = []
     start_idx = None
+
+    # write result video
+    frame_width = int(cap.get(3)) 
+    frame_height = int(cap.get(4))
+    size = (frame_width, frame_height)
+    result = cv2.VideoWriter('../content/result.avi',  
+                         cv2.VideoWriter_fourcc(*'MJPG'), 
+                         10, size)
     while True:
         grabbed, frame = cap.read()
         if grabbed != True:
@@ -167,7 +175,8 @@ def video_recognize(image_classes, embeddings, det, face_model, video_source=0, 
             break
 
         draw_polyboxes(frame, rec_dist, rec_class, bbs, ccs, dist_thresh)
-        cv2.imshow("", frame)
+        # cv2.imshow("", frame)
+        result.write(frame)
         cur_frame_idx += 1
         
     cap.release()

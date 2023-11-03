@@ -144,7 +144,7 @@ def video_recognize(image_classes, embeddings, det, face_model, video_source=0, 
     frame_width = int(cap.get(3)) 
     frame_height = int(cap.get(4))
     size = (frame_width, frame_height)
-    result = cv2.VideoWriter('../content/0_filename.avi',  
+    result = cv2.VideoWriter('../content/result.avi',  
                          cv2.VideoWriter_fourcc(*'MJPG'), 
                          10, size)
     cur_frame_idx = 0
