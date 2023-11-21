@@ -131,6 +131,8 @@ class Embedding_sound():
                 start = dic['offset']
                 end = start + dic['duration']
                 self.time_stamps[uniq_name].append([start, end])
+                label = dic['label']
+                uniq_id = dic['uniq_id']
 
         if self._speaker_params.save_embeddings:
             embedding_dir = os.path.join(self._speaker_dir, 'embeddings')
@@ -138,6 +140,8 @@ class Embedding_sound():
                 os.makedirs(embedding_dir, exist_ok=True)
 
             prefix = get_uniqname_from_filepath(manifest_file)
+            if label or uniq_id:
+                prefix += "_" + label + "_" + str(uniq_id)
             name = os.path.join(embedding_dir, prefix)
             self._embeddings_file = name + f'_embeddings.pkl'
             pkl.dump(self.embeddings, open(self._embeddings_file, 'wb'))
@@ -153,7 +157,7 @@ def embedding_human_voice(config: dict, audio_filepath: str, offset: float, dura
     os.makedirs(output, exist_ok=True)
     # check if embedding exists
     name = get_uniqname_from_filepath(audio_filepath)
-    pkl_file = os.path.join(output, f"speaker_outputs/embeddings/{name}_embeddings.pkl")
+    pkl_file = os.path.join(output, f"embeddings/{name}_embeddings.pkl")
     if os.path.exists(pkl_file):
         print(f"{name} embedding existed. Embedding located in {pkl_file}")
         exit()
@@ -162,7 +166,7 @@ def embedding_human_voice(config: dict, audio_filepath: str, offset: float, dura
         'audio_filepath': audio_filepath, 
         'offset': offset, 
         'duration': duration, # write it manually 
-        'label': name, 
+        'label': label, 
         'uniq_id': uniq_id
     }
     manifest_filepath = os.path.join(output,get_uniqname_from_filepath(audio_filepath) + ".json") 
@@ -248,7 +252,7 @@ def main():
     config = OmegaConf.load(MODEL_CONFIG)
     config.diarizer.out_dir = output_dir
     database = "./database/"
-    human_emb = embedding_human_voice(config, audio_filepath = "./data/voice2.wav", offset=0.1, duration=2.2, uniq_id = "speaker0", output = database)
+    human_emb = embedding_human_voice(config, audio_filepath = "./data/voice.wav", offset=0.1, duration=0.9, label = "speaker0", uniq_id = 1, output = database)
     # human = "./database/speaker_outputs/embeddings/TPM_embeddings.pkl"
     # embedding sound
 
