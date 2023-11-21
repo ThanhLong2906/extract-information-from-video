@@ -1,0 +1,19 @@
+wget
+text-unidecode
+# pip install torchaudio -f https://download.pytorch.org/whl/torch_stable.html
+# apt-get install sox libsndfile1 ffmpeg
+omegaconf
+hydra-core
+pytorch-lightning
+librosa
+transformers
+pandas
+sentencepiece
+youtokentome
+inflect
+webdataset
+datasets
+pyannote.audio
+editdistance
+jiwer
+ipython
