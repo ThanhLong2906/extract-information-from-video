@@ -93,7 +93,7 @@ class Embedding_sound():
         self._out_dir = self._diarizer_params.out_dir
 
         # self._speaker_dir = os.path.join(self._diarizer_params.out_dir, 'speaker_outputs')
-        self._speaker_dir = self._diarizer_params.out_dir
+        # self._speaker_dir = self._diarizer_params.out_dir
 
         logging.info("Extracting embeddings for Diarization")
         self._setup_spkr_test_data(manifest_file)
@@ -135,7 +135,7 @@ class Embedding_sound():
                 uniq_id = dic['uniq_id']
 
         if self._speaker_params.save_embeddings:
-            embedding_dir = os.path.join(self._speaker_dir, 'embeddings')
+            embedding_dir = os.path.join(self._out_dir, 'embeddings')
             if not os.path.exists(embedding_dir):
                 os.makedirs(embedding_dir, exist_ok=True)
 
@@ -146,7 +146,7 @@ class Embedding_sound():
             self._embeddings_file = name + f'_embeddings.pkl'
             pkl.dump(self.embeddings, open(self._embeddings_file, 'wb'))
             logging.info("Saved embedding files to {}".format(embedding_dir))
-
+        return self._embeddings_file
     @property
     def verbose(self) -> bool:
         return self._cfg.verbose
@@ -157,6 +157,8 @@ def embedding_human_voice(config: dict, audio_filepath: str, offset: float, dura
     os.makedirs(output, exist_ok=True)
     # check if embedding exists
     name = get_uniqname_from_filepath(audio_filepath)
+    if label or uniq_id:
+        name += "_" + label + "_" + str(uniq_id)
     pkl_file = os.path.join(output, f"embeddings/{name}_embeddings.pkl")
     if os.path.exists(pkl_file):
         print(f"{name} embedding existed. Embedding located in {pkl_file}")
@@ -186,18 +188,20 @@ def embedding_human_voice(config: dict, audio_filepath: str, offset: float, dura
     # config = OmegaConf.load(MODEL_CONFIG)
     config.diarizer.out_dir = output
     embedding = Embedding_sound(config)
-    embedding._extract_embeddings(manifest_file=manifest_filepath, scale_idx=0, num_scales=1)
-    return pkl_file
-def embedding_sound(config: dict, audio_filepath: str, rttm_filepath: str, uniq_id: str = None, output: str = None):
+    embedding_path = embedding._extract_embeddings(manifest_file=manifest_filepath, scale_idx=0, num_scales=1)
+    return embedding_path
+
+def embedding_sound(config: dict, audio_filepath: str, rttm_filepath: str, output: str = None):
+    embeddings_path = []
     if output:
         os.makedirs(output, exist_ok=True)
     if rttm_filepath.endwith(".rttm"):
         with open(rttm_filepath, "r") as f:
             lines = f.readlines()
-            for line in lines:
+            for idx, line in enumerate(lines):
                 offset = float(line.split()[3])
                 duration = float(line.split()[4])
-                name = line.split()[1]
+                name = line.split()[7]
                 # create output folder
                 
                 # check if embedding exists
@@ -212,7 +216,7 @@ def embedding_sound(config: dict, audio_filepath: str, rttm_filepath: str, uniq_
                     'offset': offset, 
                     'duration': duration, # write it manually 
                     'label': name, 
-                    'uniq_id': uniq_id
+                    'uniq_id': idx
                 }
                 manifest_filepath = os.path.join(output,name + ".json") 
 
@@ -222,7 +226,9 @@ def embedding_sound(config: dict, audio_filepath: str, rttm_filepath: str, uniq_
 
                 config.diarizer.out_dir = output
                 embedding = Embedding_sound(config)
-                embedding._extract_embeddings(manifest_file=manifest_filepath, scale_idx=0, num_scales=1)
+                embed_path = embedding._extract_embeddings(manifest_file=manifest_filepath, scale_idx=0, num_scales=1)
+                embeddings_path.append(embed_path)
+    return embeddings_path
 
 def sound_similarity(audio_sound_emb: str, human_sound_emb: str):
     '''
@@ -250,9 +256,11 @@ def main():
         MODEL_CONFIG = wget.download(config_url,data_dir)
 
     config = OmegaConf.load(MODEL_CONFIG)
-    config.diarizer.out_dir = output_dir
+    # config.diarizer.out_dir = output_dir
     database = "./database/"
-    human_emb = embedding_human_voice(config, audio_filepath = "./data/voice.wav", offset=0.1, duration=0.9, label = "speaker0", uniq_id = 1, output = database)
+    human_emb_path = embedding_human_voice(config, audio_filepath = "./data/voice.wav", offset=0.1, duration=0.9, label = "speaker0", uniq_id = 1, output = database)
+    embeddings_path = embedding_sound(config, os.path.join(data_dir, "file.wav"), os.path.join(data_dir, "file.rttm"))
+    
     # human = "./database/speaker_outputs/embeddings/TPM_embeddings.pkl"
     # embedding sound
 
