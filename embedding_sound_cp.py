@@ -260,10 +260,18 @@ def main():
     database = "./database/"
     human_emb_path = embedding_human_voice(config, audio_filepath = "./data/voice.wav", offset=0.1, duration=0.9, label = "speaker0", uniq_id = 1, output = database)
     embeddings_path = embedding_sound(config, os.path.join(data_dir, "file.wav"), os.path.join(data_dir, "file.rttm"))
-    
+    scores = []
+    for path in embeddings_path:
+        score = sound_similarity(path, human_emb_path)
+        scores.append(score)
     # human = "./database/speaker_outputs/embeddings/TPM_embeddings.pkl"
     # embedding sound
-
+    with open()
+    with open("file.wav", "r+") as f:
+        lines = f.readlines()
+        for line, score in zip(lines, scores):
+            if score >= THRESH:
+                line.split()[7] = get_uniqname_from_filepath(human_emb_path)
 
     # if rttm_filepath.endwith(".rttm"):
     #     with open(rttm_filepath, "r") as f:
@@ -293,7 +301,7 @@ def main():
     
     #             audio = os.path.join(output_dir, f"speaker_outputs/embeddings/{}"  #"./oracle_vad/speaker_outputs/embeddings/voice_segment_embeddings.pkl"
     
-    #             score = sound_similarity(audio, human)
+                # score = sound_similarity(audio, human)
     #             if score >= THRESH:
 
 if __name__=='__main__':
