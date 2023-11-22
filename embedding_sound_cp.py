@@ -138,8 +138,8 @@ class Embedding_sound():
                 os.makedirs(embedding_dir, exist_ok=True)
 
             prefix = get_uniqname_from_filepath(manifest_file)
-            if label or uniq_id:
-                prefix += "_" + label + "_" + str(uniq_id)
+            if uniq_id:
+                prefix += "_"+str(uniq_id)
             name = os.path.join(embedding_dir, prefix)
             self._embeddings_file = name + f'_embeddings.pkl'
             pkl.dump(self.embeddings, open(self._embeddings_file, 'wb'))
@@ -150,17 +150,15 @@ class Embedding_sound():
         return self._cfg.verbose
 
 
-def embedding_human_voice(config: dict, audio_filepath: str, offset: float, duration:float, label: str = None, uniq_id: str = None, output: str = None):
+def embedding_human_voice(config: dict, audio_filepath: str, offset: float, duration:float, label: str='U', uniq_id: str = "unk", output: str = None):
     # create output folder
     os.makedirs(output, exist_ok=True)
     # check if embedding exists
     name = get_uniqname_from_filepath(audio_filepath)
-    if label or uniq_id:
-        name += "_" + label + "_" + str(uniq_id)
     pkl_file = os.path.join(output, f"embeddings/{name}_embeddings.pkl")
     if os.path.exists(pkl_file):
         print(f"{name} embedding existed. Embedding located in {pkl_file}")
-        exit()
+        return pkl_file
     # create manifest file
     meta = {
         'audio_filepath': audio_filepath, 
@@ -193,7 +191,7 @@ def embedding_sound(config: dict, audio_filepath: str, rttm_filepath: str, outpu
     embeddings_path = []
     if output:
         os.makedirs(output, exist_ok=True)
-    if rttm_filepath.endwith(".rttm"):
+    if rttm_filepath.endswith(".rttm"):
         with open(rttm_filepath, "r") as f:
             lines = f.readlines()
             for idx, line in enumerate(lines):
@@ -213,9 +211,10 @@ def embedding_sound(config: dict, audio_filepath: str, rttm_filepath: str, outpu
                     'audio_filepath': audio_filepath, 
                     'offset': offset, 
                     'duration': duration, # write it manually 
-                    'label': name, 
+                    'label': 'U', 
                     'uniq_id': idx
                 }
+                
                 manifest_filepath = os.path.join(output,name + ".json") 
 
                 with open(manifest_filepath,'w+') as fp:
@@ -239,40 +238,40 @@ def sound_similarity(audio_sound_emb: str, human_sound_emb: str):
     cos = torch.nn.CosineSimilarity()
     return cos(audio_emb, human_emb)
 
-def main():
+# def main():
 
-    #download and crearte
-    ROOT = os.getcwd()
-    data_dir = os.path.join(ROOT,'data')
+#     #download and crearte
+#     ROOT = os.getcwd()
+#     data_dir = os.path.join(ROOT,'data')
 
-    output_dir = os.path.join(ROOT, 'oracle_vad')
-    os.makedirs(output_dir,exist_ok=True)
+#     output_dir = os.path.join(ROOT, 'oracle_vad')
+#     os.makedirs(output_dir,exist_ok=True)
 
-    MODEL_CONFIG = os.path.join(data_dir,'diar_infer_telephonic.yaml')
-    if not os.path.exists(MODEL_CONFIG):
-        config_url = "https://raw.githubusercontent.com/NVIDIA/NeMo/main/examples/speaker_tasks/diarization/conf/inference/diar_infer_telephonic.yaml"
-        MODEL_CONFIG = wget.download(config_url,data_dir)
+#     MODEL_CONFIG = os.path.join(data_dir,'diar_infer_telephonic.yaml')
+#     if not os.path.exists(MODEL_CONFIG):
+#         config_url = "https://raw.githubusercontent.com/NVIDIA/NeMo/main/examples/speaker_tasks/diarization/conf/inference/diar_infer_telephonic.yaml"
+#         MODEL_CONFIG = wget.download(config_url,data_dir)
 
-    config = OmegaConf.load(MODEL_CONFIG)
-    # config.diarizer.out_dir = output_dir
-    database = "./database/"
-    human_emb_path = embedding_human_voice(config, audio_filepath = "./data/voice.wav", offset=0.1, duration=0.9, label = "speaker0", uniq_id = 1, output = database)
-    embeddings_path = embedding_sound(config, os.path.join(data_dir, "file.wav"), os.path.join(data_dir, "file.rttm"))
-    scores = []
-    for path in embeddings_path:
-        score = sound_similarity(path, human_emb_path)
-        scores.append(score)
-    # human = "./database/speaker_outputs/embeddings/TPM_embeddings.pkl"
-    # embedding sound
-    with open("new_file.rttm", 'wb') as nf:
-        with open("file.rttm", "r+") as f:
-            lines = f.readlines()
-            for line, score in zip(lines, scores):
-                if score >= config.speaker_embeddings.parameters.threshold:
-                    line.split()[7] = get_uniqname_from_filepath(human_emb_path)
-                    line = ' '.join(line)
-                    nf.write(line.encode('utf-8'))
-                    nf.write(b'\n')
+#     config = OmegaConf.load(MODEL_CONFIG)
+#     # config.diarizer.out_dir = output_dir
+#     database = "./database/"
+#     human_emb_path = embedding_human_voice(config, audio_filepath = "./data/TPM.wav", offset=0.1, duration=2.8, label = "speaker0", uniq_id = 1, output = database)
+#     # embeddings_path = embedding_sound(config, os.path.join(data_dir, "file.wav"), os.path.join(data_dir, "file.rttm"))
+#     # scores = []
+#     # for path in embeddings_path:
+#     #     score = sound_similarity(path, human_emb_path)
+#     #     scores.append(score)
+#     # # human = "./database/speaker_outputs/embeddings/TPM_embeddings.pkl"
+#     # # embedding sound
+#     # with open("new_file.rttm", 'wb') as nf:
+#     #     with open("file.rttm", "r+") as f:
+#     #         lines = f.readlines()
+#     #         for line, score in zip(lines, scores):
+#     #             if score >= config.speaker_embeddings.parameters.threshold:
+#     #                 line.split()[7] = get_uniqname_from_filepath(human_emb_path)
+#     #                 line = ' '.join(line)
+#     #                 nf.write(line.encode('utf-8'))
+#     #                 nf.write(b'\n')
 
-if __name__=='__main__':
-    main()
+# if __name__=='__main__':
+#     main()

@@ -17,3 +17,4 @@ pyannote.audio
 editdistance
 jiwer
 ipython
+onnx
