@@ -23,8 +23,6 @@ except ImportError:
     def autocast(enabled=None):
         yield
 
-THRESH = 0.3 
-
 class Embedding_sound():
     def __init__(self, cfg: Union[DictConfig, Any]) -> None:
         if isinstance(cfg, DictConfig):
@@ -79,7 +77,7 @@ class Embedding_sound():
             'sample_rate': self._cfg.sample_rate,
             'batch_size': self._cfg.get('batch_size'),
             'trim_silence': False,
-            'labels': None,
+            'labels': "UNK",
             'num_workers': self._cfg.num_workers,
         }
         self._speaker_model.setup_test_data(spk_dl_config)
@@ -266,43 +264,15 @@ def main():
         scores.append(score)
     # human = "./database/speaker_outputs/embeddings/TPM_embeddings.pkl"
     # embedding sound
-    with open()
-    with open("file.wav", "r+") as f:
-        lines = f.readlines()
-        for line, score in zip(lines, scores):
-            if score >= THRESH:
-                line.split()[7] = get_uniqname_from_filepath(human_emb_path)
-
-    # if rttm_filepath.endwith(".rttm"):
-    #     with open(rttm_filepath, "r") as f:
-    #         lines = f.readlines()
-    #         for line in lines:
-    #             offset = float(line.split()[3])
-    #             duration = float(line.split()[4])
-    #             namefile = line.split()[1]
-    #             label = line.split()[7]
-    #             meta = {
-    #                 'audio_filepath': audio_filepath, 
-    #                 'offset': offset, 
-    #                 'duration': duration, # write it manually 
-    #                 'label': label, 
-    #                 'uniq_id': label,
-    #             }
-    #             manifest_filepath = os.path.join(output_dir,name+"_"+lable+"_"+idx + ".json") 
-
-    #             with open(manifest_filepath,'w+') as fp:
-    #                 json.dump(meta,fp)
-    #                 fp.write('\n')
-
-    #             embedding = Embedding_sound(config)
-    #             embedding._extract_embeddings(manifest_file=manifest_filepath, scale_idx=0, num_scales=1)
-
-
-    
-    #             audio = os.path.join(output_dir, f"speaker_outputs/embeddings/{}"  #"./oracle_vad/speaker_outputs/embeddings/voice_segment_embeddings.pkl"
-    
-                # score = sound_similarity(audio, human)
-    #             if score >= THRESH:
+    with open("new_file.rttm", 'wb') as nf:
+        with open("file.rttm", "r+") as f:
+            lines = f.readlines()
+            for line, score in zip(lines, scores):
+                if score >= config.speaker_embeddings.parameters.threshold:
+                    line.split()[7] = get_uniqname_from_filepath(human_emb_path)
+                    line = ' '.join(line)
+                    nf.write(line.encode('utf-8'))
+                    nf.write(b'\n')
 
 if __name__=='__main__':
     main()

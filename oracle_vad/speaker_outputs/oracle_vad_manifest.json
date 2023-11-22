@@ -1,2 +1,9 @@
-{"audio_filepath": "/home/long/NeMo/data/an4_diarize_test.wav", "offset": 0.29898, "duration": 2.47133, "label": "UNK", "uniq_id": "an4_diarize_test"}
-{"audio_filepath": "/home/long/NeMo/data/an4_diarize_test.wav", "offset": 3.1639, "duration": 1.98311, "label": "UNK", "uniq_id": "an4_diarize_test"}
+{"audio_filepath": "/home/long/NeMo/data/phone.wav", "offset": 0.1, "duration": 1.7, "label": "UNK", "uniq_id": "phone"}
+{"audio_filepath": "/home/long/NeMo/data/phone.wav", "offset": 2.1, "duration": 0.8, "label": "UNK", "uniq_id": "phone"}
+{"audio_filepath": "/home/long/NeMo/data/phone.wav", "offset": 3.7, "duration": 1.5, "label": "UNK", "uniq_id": "phone"}
+{"audio_filepath": "/home/long/NeMo/data/phone.wav", "offset": 5.8, "duration": 7.2, "label": "UNK", "uniq_id": "phone"}
+{"audio_filepath": "/home/long/NeMo/data/phone.wav", "offset": 13.5, "duration": 0.4, "label": "UNK", "uniq_id": "phone"}
+{"audio_filepath": "/home/long/NeMo/data/phone.wav", "offset": 14.6, "duration": 0.3, "label": "UNK", "uniq_id": "phone"}
+{"audio_filepath": "/home/long/NeMo/data/phone.wav", "offset": 15.1, "duration": 1.2, "label": "UNK", "uniq_id": "phone"}
+{"audio_filepath": "/home/long/NeMo/data/phone.wav", "offset": 16.5, "duration": 4.4, "label": "UNK", "uniq_id": "phone"}
+{"audio_filepath": "/home/long/NeMo/data/phone.wav", "offset": 21.7, "duration": 0.7, "label": "UNK", "uniq_id": "phone"}
