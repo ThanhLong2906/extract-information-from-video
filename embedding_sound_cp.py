@@ -82,7 +82,7 @@ class Embedding_sound():
         }
         self._speaker_model.setup_test_data(spk_dl_config)
 
-    def _extract_embeddings(self, manifest_file: str, scale_idx: int, num_scales: int):
+    def _extract_embeddings(self, manifest_file: str):
         """
         This method extracts speaker embeddings from segments passed through manifest_file
         Optionally you may save the intermediate speaker embeddings for debugging or any use. 
@@ -102,7 +102,7 @@ class Embedding_sound():
         all_embs = torch.empty([0])
         for test_batch in tqdm(
             self._speaker_model.test_dataloader(),
-            desc=f'[{scale_idx+1}/{num_scales}] extract embeddings',
+            desc=f'extract embeddings',
             leave=True,
             disable=not self.verbose,
         ):

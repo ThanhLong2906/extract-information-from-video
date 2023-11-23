@@ -16,26 +16,26 @@ def main():
 
     #download and crearte
     ROOT = os.getcwd()
-    data_dir = os.path.join(ROOT,'data')
+    data_dir = os.path.join(ROOT,'input_data')
     os.makedirs(data_dir, exist_ok=True)
-    an4_audio = os.path.join(data_dir,'phone.wav')
-    an4_rttm = os.path.join(data_dir,'phone.rttm')
-    if not os.path.exists(an4_audio):
-        an4_audio_url = "https://nemo-public.s3.us-east-2.amazonaws.com/an4_diarize_test.wav"
-        an4_audio = wget.download(an4_audio_url, data_dir)
-    if not os.path.exists(an4_rttm):
-        an4_rttm_url = "https://nemo-public.s3.us-east-2.amazonaws.com/an4_diarize_test.rttm"
-        an4_rttm = wget.download(an4_rttm_url, data_dir)
+    phone_audio = os.path.join(data_dir,'phone.wav')
+    phone_rttm = os.path.join(data_dir,'phone.rttm')
+    # if not os.path.exists(phone_audio):
+    #     an4_audio_url = "https://nemo-public.s3.us-east-2.amazonaws.com/an4_diarize_test.wav"
+    #     phone_audio = wget.download(an4_audio_url, data_dir)
+    # if not os.path.exists(phone_rttm):
+    #     an4_rttm_url = "https://nemo-public.s3.us-east-2.amazonaws.com/an4_diarize_test.rttm"
+    #     phone_rttm = wget.download(an4_rttm_url, data_dir)
 
-    
+    #create file input_manifest.json 
     meta = {
-        'audio_filepath': an4_audio, 
+        'audio_filepath': phone_audio, 
         'offset': 0, 
         'duration':None, 
         'label': 'infer', 
         'text': '-', 
         'num_speakers': 2, 
-        'rttm_filepath': an4_rttm, 
+        'rttm_filepath': phone_rttm, 
         'uem_filepath' : None
     }
 
@@ -43,19 +43,21 @@ def main():
         json.dump(meta,fp)
         fp.write('\n')
 
-    output_dir = os.path.join(ROOT, 'oracle_vad')
+
+    output_dir = os.path.join(ROOT, 'output')
     # pred_rttms_dir = os.path.join(output_dir, "pred_rttms")
     os.makedirs(output_dir,exist_ok=True)
 
-    
+    # create config file
     MODEL_CONFIG = os.path.join(data_dir,'diar_infer_telephonic.yaml')
     if not os.path.exists(MODEL_CONFIG):
         config_url = "https://raw.githubusercontent.com/NVIDIA/NeMo/main/examples/speaker_tasks/diarization/conf/inference/diar_infer_telephonic.yaml"
         MODEL_CONFIG = wget.download(config_url,data_dir)
 
+    # add information for config file for clustering process
     config = OmegaConf.load(MODEL_CONFIG)
 
-    config.diarizer.manifest_filepath = 'data/input_manifest.json'
+    config.diarizer.manifest_filepath = os.path.join(data_dir, 'input_manifest.json')
     config.diarizer.out_dir = output_dir # Directory to store intermediate files and prediction outputs
     pretrained_speaker_model = 'titanet_large'
     config.diarizer.speaker_embeddings.model_path = pretrained_speaker_model
@@ -65,34 +67,36 @@ def main():
     config.diarizer.oracle_vad = True # ----> ORACLE VAD 
     config.diarizer.clustering.parameters.oracle_num_speakers = False
 
+    # clustering
     oracle_vad_clusdiar_model = ClusteringDiarizer(cfg=config)
     # And lets diarize
     oracle_vad_clusdiar_model.diarize()
 
-    database = "./database/"
-    human_voice = os.path.join(data_dir, "TPM.wav")
-    human_emb_path = embedding_human_voice(config, audio_filepath = human_voice, offset=0.1, duration=2.8, output = database)
-    embeddings_path = embedding_sound(config, an4_audio, an4_rttm, output_dir)
-    scores = []
-    for path in embeddings_path:
-        score = sound_similarity(path, human_emb_path)
-        scores.append(score)
-    # human = "./database/speaker_outputs/embeddings/TPM_embeddings.pkl"
-    # embedding sound
-    print(scores)
-    with open("result.rttm", 'wb') as nf:
-        with open(os.path.join(output_dir, "pred_rttms/phone.rttm"), "r+") as f:
-            lines = f.readlines()
+
+    # database = "./database/"
+    # human_voice = os.path.join(database, "TPM.wav")
+    # human_emb_path = embedding_human_voice(config, audio_filepath = human_voice, offset=0.1, duration=2.8, output = database)
+    # embeddings_path = embedding_sound(config, phone_audio, phone_rttm, output_dir)
+    # scores = []
+    # for path in embeddings_path:
+    #     score = sound_similarity(path, human_emb_path)
+    #     scores.append(score)
+    # # human = "./database/speaker_outputs/embeddings/TPM_embeddings.pkl"
+    # # embedding sound
+    # print(scores)
+    # with open("result.rttm", 'wb') as nf:
+    #     with open(os.path.join(output_dir, "pred_rttms/phone.rttm"), "r+") as f:
+    #         lines = f.readlines()
             
-            for line, score in zip(lines, scores):
-                if float(score) >= THRESH:#config.speaker_embeddings.parameters.threshold:
-                    new_line = line.split()
-                    new_line[7] = get_uniqname_from_filepath(human_voice)
-                    line = " "
-                    for word in new_line:
-                        line += word + " "
-                    nf.write(line.encode('utf-8'))
-                    nf.write(b'\n')
+    #         for line, score in zip(lines, scores):
+    #             if float(score) >= THRESH:#config.speaker_embeddings.parameters.threshold:
+    #                 new_line = line.split()
+    #                 new_line[7] = get_uniqname_from_filepath(human_voice)
+    #                 line = " "
+    #                 for word in new_line:
+    #                     line += word + " "
+    #                 nf.write(line.encode('utf-8'))
+    #                 nf.write(b'\n')
 
     
 if __name__ == '__main__':
