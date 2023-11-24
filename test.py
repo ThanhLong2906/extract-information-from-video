@@ -73,30 +73,30 @@ def main():
     oracle_vad_clusdiar_model.diarize()
 
 
-    # database = "./database/"
-    # human_voice = os.path.join(database, "TPM.wav")
-    # human_emb_path = embedding_human_voice(config, audio_filepath = human_voice, offset=0.1, duration=2.8, output = database)
-    # embeddings_path = embedding_sound(config, phone_audio, phone_rttm, output_dir)
-    # scores = []
-    # for path in embeddings_path:
-    #     score = sound_similarity(path, human_emb_path)
-    #     scores.append(score)
-    # # human = "./database/speaker_outputs/embeddings/TPM_embeddings.pkl"
-    # # embedding sound
-    # print(scores)
-    # with open("result.rttm", 'wb') as nf:
-    #     with open(os.path.join(output_dir, "pred_rttms/phone.rttm"), "r+") as f:
-    #         lines = f.readlines()
+    database = "./database/"
+    human_voice = os.path.join(data_dir, "TPM.wav")
+    human_emb_path = embedding_human_voice(config, audio_filepath = human_voice, offset=0.1, duration=2.8, output = database)
+    embeddings_path = embedding_sound(config, phone_audio, phone_rttm, output_dir)
+    scores = []
+    for path in embeddings_path:
+        score = sound_similarity(path, human_emb_path)
+        scores.append(score)
+    # human = "./database/speaker_outputs/embeddings/TPM_embeddings.pkl"
+    # embedding sound
+    print(scores)
+    with open("result.rttm", 'wb') as nf:
+        with open(os.path.join(output_dir, "pred_rttms/phone.rttm"), "r+") as f:
+            lines = f.readlines()
             
-    #         for line, score in zip(lines, scores):
-    #             if float(score) >= THRESH:#config.speaker_embeddings.parameters.threshold:
-    #                 new_line = line.split()
-    #                 new_line[7] = get_uniqname_from_filepath(human_voice)
-    #                 line = " "
-    #                 for word in new_line:
-    #                     line += word + " "
-    #                 nf.write(line.encode('utf-8'))
-    #                 nf.write(b'\n')
+            for line, score in zip(lines, scores):
+                if float(score) >= THRESH:#config.speaker_embeddings.parameters.threshold:
+                    new_line = line.split()
+                    new_line[7] = get_uniqname_from_filepath(human_voice)
+                    line = " "
+                    for word in new_line:
+                        line += word + " "
+                    nf.write(line.encode('utf-8'))
+                    nf.write(b'\n')
 
     
 if __name__ == '__main__':

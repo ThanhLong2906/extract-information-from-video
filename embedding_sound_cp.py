@@ -131,7 +131,6 @@ class Embedding_sound():
                 self.time_stamps[uniq_name].append([start, end])
                 label = dic['label']
                 uniq_id = dic['uniq_id']
-
         if self._speaker_params.save_embeddings:
             embedding_dir = os.path.join(self._out_dir, 'embeddings')
             if not os.path.exists(embedding_dir):
@@ -141,10 +140,10 @@ class Embedding_sound():
             if uniq_id:
                 prefix += "_"+str(uniq_id)
             name = os.path.join(embedding_dir, prefix)
-            self._embeddings_file = name + f'_embeddings.pkl'
-            pkl.dump(self.embeddings, open(self._embeddings_file, 'wb'))
+            embeddings_file = name + f'_embeddings.pkl'
+            pkl.dump(self.embeddings, open(embeddings_file, 'wb'))
             logging.info("Saved embedding files to {}".format(embedding_dir))
-        return self._embeddings_file
+        return embeddings_file
     @property
     def verbose(self) -> bool:
         return self._cfg.verbose
@@ -184,7 +183,7 @@ def embedding_human_voice(config: dict, audio_filepath: str, offset: float, dura
     # config = OmegaConf.load(MODEL_CONFIG)
     config.diarizer.out_dir = output
     embedding = Embedding_sound(config)
-    embedding_path = embedding._extract_embeddings(manifest_file=manifest_filepath, scale_idx=0, num_scales=1)
+    embedding_path = embedding._extract_embeddings(manifest_file=manifest_filepath)
     return embedding_path
 
 def embedding_sound(config: dict, audio_filepath: str, rttm_filepath: str, output: str = None):
@@ -223,7 +222,7 @@ def embedding_sound(config: dict, audio_filepath: str, rttm_filepath: str, outpu
 
                 config.diarizer.out_dir = output
                 embedding = Embedding_sound(config)
-                embed_path = embedding._extract_embeddings(manifest_file=manifest_filepath, scale_idx=0, num_scales=1)
+                embed_path = embedding._extract_embeddings(manifest_file=manifest_filepath)
                 embeddings_path.append(embed_path)
     return embeddings_path
 
