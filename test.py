@@ -11,9 +11,13 @@ from embedding_sound_cp import (
     embedding_sound,
     sound_similarity
 )
+import argparse
 THRESH = 0.3
 def main():
-
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-vb", "--voice_embeddings", type=str, description="object voice file for embeddings")
+    parser.add_argument("-")
+    args = parser.parse_args()
     #download and crearte
     ROOT = os.getcwd()
     data_dir = os.path.join(ROOT,'input_data')
@@ -74,7 +78,7 @@ def main():
 
 
     database = "./database/"
-    human_voice = os.path.join(data_dir, "TPM.wav")
+    human_voice = args.voice_embeddings #os.path.join(data_dir, "TPM.wav")
     human_emb_path = embedding_human_voice(config, audio_filepath = human_voice, offset=0.1, duration=2.8, output = database)
     embeddings_path = embedding_sound(config, phone_audio, phone_rttm, output_dir)
     scores = []

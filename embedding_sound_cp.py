@@ -148,8 +148,11 @@ class Embedding_sound():
     def verbose(self) -> bool:
         return self._cfg.verbose
 
+def get_length_from_sound_file(filepath: str):
+    import librosa
+    return librosa.get_duration(filename=filepath)
 
-def embedding_human_voice(config: dict, audio_filepath: str, offset: float, duration:float, label: str='U', uniq_id: str = "unk", output: str = None):
+def embedding_human_voice(config: dict, audio_filepath: str, offset: float = 0.1, duration:float = None, label: str='U', uniq_id: str = "unk", output: str = None):
     # create output folder
     os.makedirs(output, exist_ok=True)
     # check if embedding exists
@@ -159,10 +162,13 @@ def embedding_human_voice(config: dict, audio_filepath: str, offset: float, dura
         print(f"{name} embedding existed. Embedding located in {pkl_file}")
         return pkl_file
     # create manifest file
+    if duration is None:
+        duration = get_length_from_sound_file(audio_filepath)
+
     meta = {
         'audio_filepath': audio_filepath, 
         'offset': offset, 
-        'duration': duration, # write it manually 
+        'duration': duration, 
         'label': label, 
         'uniq_id': uniq_id
     }
