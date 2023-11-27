@@ -12,17 +12,19 @@ from embedding_sound_cp import (
     sound_similarity
 )
 import argparse
-THRESH = 0.1
 def main():
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument("-vb", "--voice_embeddings", type=str, description="object voice file for embeddings")
-    # parser.add_argument("-")
-    # args = parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-v", "--voice_embeddings", type=str, help="object voice file for embeddings")
+    parser.add_argument("-i", "--input_audio", type=str, help="the input audio file for speaker diarization")
+    parser.add_argument("-t","--threshold", type=float, default= 0.1, help= "threshold for voice verification")
+    args = parser.parse_args()
+
     #download and crearte
     ROOT = os.getcwd()
     data_dir = os.path.join(ROOT,'input_data')
     os.makedirs(data_dir, exist_ok=True)
-    phone_audio = os.path.join(data_dir,'ielts.wav')
+    # audio_name = "princesschubin_mono.wav"
+    # args.input_audio = os.path.join(data_dir,audio_name)
     
     # if not os.path.exists(phone_audio):
     #     an4_audio_url = "https://nemo-public.s3.us-east-2.amazonaws.com/an4_diarize_test.wav"
@@ -33,7 +35,7 @@ def main():
 
     #create file input_manifest.json 
     meta = {
-        'audio_filepath': phone_audio, 
+        'audio_filepath': args.input_audio, 
         'offset': 0, 
         'duration':None, 
         'label': 'infer', 
@@ -52,7 +54,8 @@ def main():
     # pred_rttms_dir = os.path.join(output_dir, "pred_rttms")
     os.makedirs(output_dir,exist_ok=True)
 
-    phone_rttm = os.path.join(output_dir,'pred_rttms/phone.rttm')
+    name = get_uniqname_from_filepath(args.input_audio)
+    pred_rttm = os.path.join(output_dir,f'pred_rttms/{name}.rttm')
 
     # create config file
     MODEL_CONFIG = os.path.join(data_dir,'diar_infer_telephonic.yaml')
@@ -68,8 +71,8 @@ def main():
     pretrained_vad = 'vad_multilingual_marblenet'
     pretrained_speaker_model = 'titanet_large'
     config.diarizer.speaker_embeddings.model_path = pretrained_speaker_model
-    config.diarizer.speaker_embeddings.parameters.window_length_in_sec = [2.0, 1.75, 1.5, 1.25, 1] #[1.5,1.25,1.0,0.75,0.5] 
-    config.diarizer.speaker_embeddings.parameters.shift_length_in_sec = [1.0, 0.875, 0.75, 0.625, 0.5]#[0.75,0.625,0.5,0.375,0.1] 
+    config.diarizer.speaker_embeddings.parameters.window_length_in_sec = [5.0, 4.5, 4.0, 3.5, 3] #[1.5,1.25,1.0,0.75,0.5] 
+    config.diarizer.speaker_embeddings.parameters.shift_length_in_sec = [2.5, 2.25, 2.0, 1.75, 1.5]#[0.75,0.625,0.5,0.375,0.1] 
     config.diarizer.speaker_embeddings.parameters.multiscale_weights= [1,1,1,1,1] 
     config.diarizer.oracle_vad = False # ----> ORACLE VAD 
     config.diarizer.clustering.parameters.oracle_num_speakers = False
@@ -80,14 +83,23 @@ def main():
     config.diarizer.vad.parameters.offset = 0.6
     config.diarizer.vad.parameters.pad_offset = -0.05
 
-    from nemo.collections.asr.models import ClusteringDiarizer
-    sd_model = ClusteringDiarizer(cfg=config)
-    sd_model.diarize()
+    # Neural diarization
+    config.diarizer.msdd_model.model_path = 'diar_msdd_telephonic' # Telephonic speaker diarization model 
+    config.diarizer.msdd_model.parameters.sigmoid_threshold = [0.7, 1.0]
+
+
+    # from nemo.collections.asr.models import ClusteringDiarizer
+    # sd_model = ClusteringDiarizer(cfg=config)
+    # sd_model.diarize()
+    from nemo.collections.asr.models.msdd_models import NeuralDiarizer
+    system_vad_msdd_model = NeuralDiarizer(cfg=config)
+    system_vad_msdd_model.diarize()
 
     database = "./database/"
-    human_voice = os.path.join(data_dir, "female_voice.wav")
-    human_emb_path = embedding_human_voice(config, audio_filepath = human_voice, offset=0.1, duration=2.8, output = database)
-    embeddings_path = embedding_sound(config, phone_audio, phone_rttm, output_dir)
+    # voice_filename = "TPM.wav"
+    #args.voice_embedding = os.path.join(data_dir, voice_filename)
+    human_emb_path = embedding_human_voice(config, audio_filepath = args.voice_embeddings, output = database)
+    embeddings_path = embedding_sound(config, args.input_audio, pred_rttm, output_dir)
     scores = []
     for path in embeddings_path:
         score = sound_similarity(path, human_emb_path)
@@ -96,13 +108,13 @@ def main():
     # embedding sound
     print(scores)
     with open("result.rttm", 'wb') as nf:
-        with open(os.path.join(output_dir, "pred_rttms/phone.rttm"), "r+") as f:
+        with open(pred_rttm, "r+") as f:
             lines = f.readlines()
             
             for line, score in zip(lines, scores):
-                if float(score) >= THRESH:#config.speaker_embeddings.parameters.threshold:
+                if float(score) >= args.threshold:#config.speaker_embeddings.parameters.threshold:
                     new_line = line.split()
-                    new_line[7] = get_uniqname_from_filepath(human_voice)
+                    new_line[7] = get_uniqname_from_filepath(args.voice_embeddings)
                     line = " "
                     for word in new_line:
                         line += word + " "

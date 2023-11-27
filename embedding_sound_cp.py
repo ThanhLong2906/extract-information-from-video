@@ -152,7 +152,7 @@ def get_length_from_sound_file(filepath: str):
     import librosa
     return librosa.get_duration(filename=filepath)
 
-def embedding_human_voice(config: dict, audio_filepath: str, offset: float = 0.1, duration:float = None, label: str='U', uniq_id: str = "unk", output: str = None):
+def embedding_human_voice(config: dict, audio_filepath: str, offset: float = 0.1, duration:float = None, label: str='U', uniq_id: str = None, output: str = None):
     # create output folder
     os.makedirs(output, exist_ok=True)
     # check if embedding exists
