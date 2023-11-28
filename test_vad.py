@@ -12,9 +12,13 @@ from embedding_sound_cp import (
     sound_similarity
 )
 import argparse
+import librosa
+import soundfile as sf
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-v", "--voice_embeddings", type=str, help="object voice file for embeddings")
+    parser.add_argument("-e", "--voice_embeddings", type=str, help="object voice file for embeddings")
     parser.add_argument("-i", "--input_audio", type=str, help="the input audio file for speaker diarization")
     parser.add_argument("-t","--threshold", type=float, default= 0.1, help= "threshold for voice verification")
     args = parser.parse_args()
@@ -23,6 +27,7 @@ def main():
     ROOT = os.getcwd()
     data_dir = os.path.join(ROOT,'input_data')
     os.makedirs(data_dir, exist_ok=True)
+    audio_file = os.path.splitext(args.input_audio)[0] + "_processed" + os.path.splitext(args.input_audio)[1]
     # audio_name = "princesschubin_mono.wav"
     # args.input_audio = os.path.join(data_dir,audio_name)
     
@@ -35,7 +40,7 @@ def main():
 
     #create file input_manifest.json 
     meta = {
-        'audio_filepath': args.input_audio, 
+        'audio_filepath': audio_file, #args.input_audio, 
         'offset': 0, 
         'duration':None, 
         'label': 'infer', 
@@ -54,7 +59,7 @@ def main():
     # pred_rttms_dir = os.path.join(output_dir, "pred_rttms")
     os.makedirs(output_dir,exist_ok=True)
 
-    name = get_uniqname_from_filepath(args.input_audio)
+    name = get_uniqname_from_filepath(audio_file)
     pred_rttm = os.path.join(output_dir,f'pred_rttms/{name}.rttm')
 
     # create config file
@@ -87,6 +92,26 @@ def main():
     config.diarizer.msdd_model.model_path = 'diar_msdd_telephonic' # Telephonic speaker diarization model 
     config.diarizer.msdd_model.parameters.sigmoid_threshold = [0.7, 1.0]
 
+    # data processsing
+
+    # load soundfile
+    y, sr = librosa.load(args.input_audio, mono=False)
+
+    # convert from stereo to mono
+    if len(y.shape) != 1:
+        y = librosa.to_mono(y)
+        
+    # resample 
+    if sr != config.sample_rate:
+        y = librosa.resample(y, orig_sr = sr, target_sr=config.sample_rate)
+
+    # volumn up factor time
+    factor = 2
+    y = y * factor
+
+    # write new audio file
+    sf.write(audio_file, y, 
+            config.sample_rate, 'PCM_24')
 
     # from nemo.collections.asr.models import ClusteringDiarizer
     # sd_model = ClusteringDiarizer(cfg=config)
@@ -99,7 +124,7 @@ def main():
     # voice_filename = "TPM.wav"
     #args.voice_embedding = os.path.join(data_dir, voice_filename)
     human_emb_path = embedding_human_voice(config, audio_filepath = args.voice_embeddings, output = database)
-    embeddings_path = embedding_sound(config, args.input_audio, pred_rttm, output_dir)
+    embeddings_path = embedding_sound(config, audio_file, pred_rttm, output_dir)
     scores = []
     for path in embeddings_path:
         score = sound_similarity(path, human_emb_path)

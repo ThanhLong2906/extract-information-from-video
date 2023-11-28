@@ -181,8 +181,8 @@ def _vad_frame_seq_collate_fn(self, batch):
             sig = normalize(sig)
         start = torch.zeros(append_len_start)
         end = torch.zeros(append_len_end)
-        if sig.dim() != start.dim():
-            sig = sig[:, 0] # add vô
+        # if sig.dim() != start.dim():
+        #     sig = sig[:, 0] # add vô
         sig = torch.cat((start, sig, end))
         sig_len += slice_length
 

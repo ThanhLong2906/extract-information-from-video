@@ -22,6 +22,8 @@ except ImportError:
     @contextmanager
     def autocast(enabled=None):
         yield
+import librosa
+import soundfile as sf
 
 class Embedding_sound():
     def __init__(self, cfg: Union[DictConfig, Any]) -> None:
@@ -152,7 +154,30 @@ def get_length_from_sound_file(filepath: str):
     import librosa
     return librosa.get_duration(filename=filepath)
 
+def audio_processing(audio_path, target_sr: int=16000, mono: bool=True, factor: float=1.0):
+    # audio_file = os.path.join(output, get_uniqname_from_filepath(audio_path), "_processed.wav")
+    audio_file = os.path.splitext(audio_path)[0] + "_processed" + os.path.splitext(audio_path)[1]
+    y, sr = librosa.load(audio_path, mono=False)
+
+    # convert from stereo to mono
+    if mono:
+        y = librosa.to_mono(y)
+        
+    # resample 
+    if sr != target_sr:
+        y = librosa.resample(y, orig_sr = sr, target_sr=target_sr)
+
+    # volumn up factor time
+    y = y * factor
+
+    # write new audio file
+    sf.write(audio_file, y, 
+            target_sr, 'PCM_24')
+    return audio_file
+
 def embedding_human_voice(config: dict, audio_filepath: str, offset: float = 0.1, duration:float = None, label: str='U', uniq_id: str = None, output: str = None):
+    # audio processing
+    audio_filepath = audio_processing(audio_filepath, factor=2.0)
     # create output folder
     os.makedirs(output, exist_ok=True)
     # check if embedding exists
