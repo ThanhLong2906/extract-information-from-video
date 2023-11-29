@@ -87,6 +87,8 @@ def main():
     config.diarizer.vad.parameters.onset = 0.8
     config.diarizer.vad.parameters.offset = 0.6
     config.diarizer.vad.parameters.pad_offset = -0.05
+    config.diarizer.vad.parameters.window_length_in_sec = 0.2
+    config.diarizer.vad.parameters.shift_length_in_sec = 0.05
 
     # Neural diarization
     config.diarizer.msdd_model.model_path = 'diar_msdd_telephonic' # Telephonic speaker diarization model 
