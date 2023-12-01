@@ -215,6 +215,13 @@ def embedding_human_voice(config: dict, audio_filepath: str, offset: float = 0.1
     config.diarizer.out_dir = output
     embedding = Embedding_sound(config)
     embedding_path = embedding._extract_embeddings(manifest_file=manifest_filepath)
+
+    # delete processed file 
+    if os.path.exists(audio_filepath):
+        os.remove(audio_filepath)
+    else:
+        print(f"The file {audio_filepath} does not exist")
+        
     return embedding_path
 
 def embedding_sound(config: dict, audio_filepath: str, rttm_filepath: str, output: str = None):

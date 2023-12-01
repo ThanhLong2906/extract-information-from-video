@@ -20,7 +20,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--voice_embeddings", type=str, help="object voice file for embeddings")
     parser.add_argument("-i", "--input_audio", type=str, help="the input audio file for speaker diarization")
-    parser.add_argument("-t","--threshold", type=float, default= 0.1, help= "threshold for voice verification")
+    parser.add_argument("-t","--threshold", type=float, default= 0.5, help= "threshold for voice verification")
     args = parser.parse_args()
 
     #download and crearte
@@ -84,8 +84,8 @@ def main():
 
     # Here, we use our in-house pretrained NeMo VAD model
     config.diarizer.vad.model_path = pretrained_vad
-    config.diarizer.vad.parameters.onset = 0.8
-    config.diarizer.vad.parameters.offset = 0.6
+    config.diarizer.vad.parameters.onset = 0.1
+    config.diarizer.vad.parameters.offset = 0.1
     config.diarizer.vad.parameters.pad_offset = -0.05
     config.diarizer.vad.parameters.window_length_in_sec = 0.2
     config.diarizer.vad.parameters.shift_length_in_sec = 0.05
@@ -147,6 +147,12 @@ def main():
                         line += word + " "
                     nf.write(line.encode('utf-8'))
                     nf.write(b'\n')
+    
+    # delete processed file 
+    if os.path.exists(audio_file):
+        os.remove(audio_file)
+    else:
+        print(f"The file {audio_file} does not exist")
 
     
 if __name__ == '__main__':
